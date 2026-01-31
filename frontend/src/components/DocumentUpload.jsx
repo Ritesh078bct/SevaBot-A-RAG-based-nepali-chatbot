@@ -5,22 +5,21 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [documentId, setDocumentId] = useState(null);
   const fileInputRef = useRef(null);
   
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Validate file type
     if (!file.name.endsWith('.pdf')) {
-      setError('कृपया PDF फाइल मात्र अपलोड गर्नुहोस् (Please upload PDF files only)');
+      setError('PDF मात्र');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError('फाइल आकार 10MB भन्दा कम हुनुपर्छ (File size must be less than 10MB)');
+      setError('10MB max');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     
@@ -29,22 +28,21 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
     
     try {
       const response = await documentAPI.upload(file, conversationId);
-      setDocumentId(response.data.id);
       setUploading(false);
       setProcessing(true);
       
-      // Poll for processing status
       pollDocumentStatus(response.data.id);
       
     } catch (err) {
       console.error('Upload error:', err);
-      setError('अपलोड असफल भयो। पुन: प्रयास गर्नुहोस्। (Upload failed. Please try again.)');
+      setError('असफल');
       setUploading(false);
+      setTimeout(() => setError(''), 3000);
     }
   };
   
   const pollDocumentStatus = async (docId) => {
-    const maxAttempts = 60; // 5 minutes max
+    const maxAttempts = 60;
     let attempts = 0;
     
     const poll = async () => {
@@ -62,16 +60,18 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
         
         if (status === 'failed') {
           setProcessing(false);
-          setError(response.data.error_message || 'प्रक्रिया असफल भयो (Processing failed)');
+          setError('प्रक्रिया असफल');
+          setTimeout(() => setError(''), 3000);
           return;
         }
         
         attempts++;
         if (attempts < maxAttempts) {
-          setTimeout(poll, 5000); // Poll every 5 seconds
+          setTimeout(poll, 5000);
         } else {
           setProcessing(false);
-          setError('प्रक्रिया समय समाप्त भयो (Processing timeout)');
+          setError('समय समाप्त');
+          setTimeout(() => setError(''), 3000);
         }
       } catch (err) {
         console.error('Polling error:', err);
@@ -82,12 +82,8 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
     poll();
   };
   
-  const handleClick = () => {
-    fileInputRef.current?.click();
-  };
-  
   return (
-    <div className="relative">
+    <div className="relative group">
       <input
         ref={fileInputRef}
         type="file"
@@ -97,61 +93,46 @@ export default function DocumentUpload({ conversationId, onUploadComplete }) {
       />
       
       <button
-        onClick={handleClick}
+        onClick={() => fileInputRef.current?.click()}
         disabled={uploading || processing}
+        type="button"
         className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Upload PDF document"
+        title="PDF अपलोड गर्नुहोस्"
       >
         {uploading || processing ? (
-          <div className="flex items-center gap-2">
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            <span className="text-sm">
-              {uploading ? 'अपलोड गर्दै...' : 'प्रक्रिया गर्दै...'}
-            </span>
-          </div>
-        ) : (
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
             />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
           </svg>
         )}
       </button>
       
-      {error && (
-        <div className="absolute top-full mt-2 left-0 right-0 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-          {error}
+      {/* Status tooltip */}
+      {(uploading || processing) && (
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1 rounded-lg whitespace-nowrap">
+          {uploading ? 'अपलोड...' : 'प्रक्रिया...'}
         </div>
       )}
       
-      {processing && (
-        <div className="absolute top-full mt-2 left-0 right-0 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm">
-          📄 कानुनी दस्तावेज प्रक्रिया गर्दै... कृपया प्रतीक्षा गर्नुहोस्।
-          <br />
-          <span className="text-xs">Processing legal document... Please wait.</span>
+      {error && (
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-1 rounded-lg whitespace-nowrap">
+          {error}
         </div>
       )}
     </div>

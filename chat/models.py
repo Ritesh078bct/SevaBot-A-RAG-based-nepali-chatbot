@@ -129,6 +129,27 @@ class Document(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 
+
+
+    parser_used = models.CharField(
+        max_length=50, 
+        null=True, 
+        blank=True,
+        choices=[
+            ('llamaparse', 'LlamaParse (Modern)'),
+            ('nepali_legal_chunker', 'Nepali Legal Chunker (Preeti)')
+        ]
+    )
+    pdf_type = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        choices=[
+            ('modern', 'Modern Unicode'),
+            ('preeti', 'Preeti/Legacy Font')
+        ]
+    )
+
     class Meta:
         ordering = ['-created_at']
 

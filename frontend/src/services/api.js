@@ -129,7 +129,7 @@ export const conversationAPI = {
   get: (id) => api.get(`/conversations/${id}/`),
   update: (id, data) => api.put(`/conversations/${id}/`, data),
   delete: (id) => api.delete(`/conversations/${id}/`),
-  addMessage: (id, content, useRag = true) => 
+  addMessage: (id, content, useRag = true) =>
     api.post(`/conversations/${id}/add_message/`, { content, use_rag: useRag }),
 };
 
@@ -142,7 +142,7 @@ export const documentAPI = {
     if (conversationId) {
       formData.append('conversation_id', conversationId);
     }
-    
+
     return api.post('/documents/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -151,6 +151,12 @@ export const documentAPI = {
   },
   get: (id) => api.get(`/documents/${id}/`),
   delete: (id) => api.delete(`/documents/${id}/`),
+};
+
+// Message APIs
+export const messageAPI = {
+  delete: (id) => api.delete(`/messages/${id}/`),
+  update: (id, content) => api.put(`/messages/${id}/`, { content }),
 };
 
 export default api;
