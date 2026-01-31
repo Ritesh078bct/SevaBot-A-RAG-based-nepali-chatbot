@@ -353,11 +353,15 @@ class ConversationViewSet(viewsets.ModelViewSet):
         top_chunks = all_context_chunks[:5]
             
         if not top_chunks:
-            return """मलाई तपाईंको प्रश्नको उत्तर दिन पर्याप्त जानकारी छैन। 
+            msg = """मलाई तपाईंको प्रश्नको उत्तर दिन पर्याप्त जानकारी छैन। 
 
     कृपया कानुनी दस्तावेज अपलोड गर्नुहोस् वा अधिक विशिष्ट प्रश्न सोध्नुहोस्।
 
     (I don't have enough information to answer your question. Please upload a legal document or ask a more specific question.)"""
+            return {
+                'response': msg,
+                'sources': {}
+            }
         
         # Log sources for debugging
         sources = {}
